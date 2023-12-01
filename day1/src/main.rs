@@ -25,31 +25,48 @@ fn get_first_and_last_numeric(line: &str) -> u32 {
 
 fn get_first_and_last_digit(line: &str) -> u32 {
     let digits: Vec<&str> = vec!["one", "two", "three", "four", "five", "six", "seven", "eight","nine"];
-    let mut lowest: (&str, usize, usize) = ("fake",0,1000000);
-    let mut highest: (&str, usize, usize) = ("fake",0, 0);
+    let mut lowest: Option<(usize, usize)> = None;
+    let mut highest: Option<(usize, usize)> = None;
+
     for num in 0..digits.len() {
         for item in line.match_indices(digits[num]){
-            if item.0 < lowest.2 {
-                lowest = (digits[num], num+ 1, item.0 );
+            match lowest {
+                None => {lowest = Some(( num + 1, item.0 ));}
+                Some(value) => {
+                    if item.0 < value.1 {
+                        lowest = Some(( num+ 1, item.0 ));
+                    }
+                }
             }
-            if item.0 > highest.2 {
-                highest = (digits[num], num + 1, item.0 );
+            match highest {
+                None => highest = Some(( num + 1, item.0 )),
+                Some(value) => {
+                    if item.0 > value.1 {
+                    highest = Some(( num + 1, item.0 ));
+                }}
             }
         }
     }
+
     let mut new_line: String = String::from(line);
     let mut added = false;
 
-    if lowest.0 != "fake"{
-        new_line.insert(lowest.2 , char::from_digit(lowest.1 as u32,10).unwrap());
-        added = true;
+    match lowest{ 
+        Some(value) => {
+            new_line.insert(value.1 , char::from_digit(value.0 as u32,10).unwrap());
+            added = true;
+        },
+        None => {}
     }
-    
-    if lowest.2 != highest.2 && highest.0 != "fake" {
-        if added {
-            new_line.insert(highest.2 + 1, char::from_digit(highest.1 as u32, 10).unwrap());
-        } else {
-            new_line.insert(highest.2, char::from_digit(highest.1 as u32, 10).unwrap());}
+
+    match highest {
+        Some(value) => {
+            if added {
+                new_line.insert(value.1 + 1, char::from_digit(value.0 as u32, 10).unwrap());} 
+            else {
+            new_line.insert(value.1, char::from_digit(value.0 as u32, 10).unwrap());}
+        },
+        None => {}
     }
 
     get_first_and_last_numeric(&new_line)
