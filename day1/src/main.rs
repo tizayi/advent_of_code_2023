@@ -18,7 +18,6 @@ fn main() {
 
 fn get_first_and_last_numeric(line: &str) -> u32 {
     let nums: Vec<char> = line.chars().filter(|item| item.is_numeric()).collect();
-    println!("{:?}",nums);
     let first:u32 = nums.first().unwrap().to_digit(10).unwrap();
     let last:u32 = nums.last().unwrap().to_digit(10).unwrap();
     first*10 + last
@@ -28,7 +27,6 @@ fn get_first_and_last_digit(line: &str) -> u32 {
     let digits: Vec<&str> = vec!["one", "two", "three", "four", "five", "six", "seven", "eight","nine"];
     let mut lowest: (&str, usize, usize) = ("fake",0,1000000);
     let mut highest: (&str, usize, usize) = ("fake",0, 0);
-    println!("{}",line);
     for num in 0..digits.len() {
         for item in line.match_indices(digits[num]){
             if item.0 < lowest.2 {
@@ -41,7 +39,7 @@ fn get_first_and_last_digit(line: &str) -> u32 {
     }
     let mut new_line: String = String::from(line);
     let mut added = false;
-    println!("{:?} {:?}", lowest,highest);
+
     if lowest.0 != "fake"{
         new_line.insert(lowest.2 , char::from_digit(lowest.1 as u32,10).unwrap());
         added = true;
@@ -53,6 +51,6 @@ fn get_first_and_last_digit(line: &str) -> u32 {
         } else {
             new_line.insert(highest.2, char::from_digit(highest.1 as u32, 10).unwrap());}
     }
-    println!("{:?}",&new_line);
+
     get_first_and_last_numeric(&new_line)
 }
