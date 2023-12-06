@@ -1,7 +1,64 @@
 use std::collections::HashMap;
 use std::env;
 use std::fs;
-use regex::Regex;
+use nom::{
+    IResult,
+    sequence::separated_pair,
+    character::complete::{digit1},
+    bytes::complete::{tag},
+    branch::alt,
+    multi::{separated_list0},
+    error::Error,
+    combinator::map
+};
+
+
+fn parse_balls(input: &str) -> IResult<&str, (&str,&str)> {
+    Ok(separated_pair(digit1, tag(" "), parse_colour)(input)?)
+}
+
+fn parse_hand(input: &str) -> IResult<&str,Vec<(&str,&str)>> {
+    separated_list0(tag(", "),parse_balls)(input)
+}
+
+fn parse_colour(input: &str) -> IResult<&str,&str> {
+    alt((tag("blue"),tag("green"),tag("red")))(input)
+}
+
+fn check_hand(hand: Vec<(&str,&str)>, bag: &HashMap<&str, u32>)-> bool {
+    for item in hand {
+        let num:u32 = item.0.parse().unwrap();
+        if num > bag[&item.1] {
+            return false
+        }
+    };
+   true
+}
+
+fn parse_game_number(input: &str)-> IResult<&str,&str> {
+    let (rest,(_,game)) = separated_pair(tag("Game"), tag(" "), digit1)(input)?;
+    Ok((rest,game))
+}
+
+fn parse_game(input: &str, bag: &HashMap<&str, u32>) -> u32 {
+    let ( rest , num)= parse_game_number(input).unwrap();
+    let game_number: u32 = num.parse().unwrap();
+    let (rest, _) = tag::<&str, &str, Error<_>>(": ")(rest).unwrap();
+    let hand_works_parser = map(
+        parse_hand,
+        |hand :Vec<(&str,&str)>| {
+            check_hand(hand, bag)
+        }
+    );
+    
+    let (_,result) = separated_list0(tag("; "),hand_works_parser)(rest).unwrap();
+
+    if result.iter().all(|x|*x) {
+        return game_number
+    }
+    0
+}
+
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -19,49 +76,6 @@ fn main() {
      ("green", 13)]
     .iter().cloned().collect();
 
-    
-    process_game("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green", &bag, &game_regex);
-}
-
-fn process_game(line: &str, bag: &HashMap<&str, i32>) -> Option<u32> {
-    let blue_regex = Regex::new(r"\b\d+ blue\b").expect("regex is wrong");
-    let green_regex = Regex::new(r"\b\d+ green\b").expect("regex is wrong");
-    let red_regex = Regex::new(r"\b\d+ red\b").expect("regex is wrong");
-    let game_regex = Regex::new(r"\b\d+\b").expect("regex is wrong");
-
-    let blue_possible = true;
-    let red_possible = true;
-    let green_possible = true;
-
-
-    let mut split = line.split(":");
-    let caps = game_regex.captures(split.next().unwrap()).unwrap();
-    let game_number = &caps[0];
-
-    let hand_split = split.next().unwrap().split(";").unwrap();
-    for hand in hand_split {
-        let Some(caps) = blue_regex.captures(hand) else {
-        continue
-        };
-        if &caps[0].parse().unwrap() as u32 > bag["blue"].try_into().unwrap(){
-            blue_possible = false
-        };
-        let Some(caps) = green_regex.captures(hand) else {
-            continue
-        };
-        if &caps[0] as u32 > bag["green"].try_into().unwrap(){
-            green_possible = false
-        };
-        let Some(caps) = red_regex.captures(hand) else {
-            continue
-        };
-        if &caps[0] as u32 > bag["red"].try_into().unwrap(){
-            red_possible = false
-        };
-    }
-    
-    println!("{} {} {}", blue_possible, red_possible,green_possible)
-
-    println!("{}",game_number);
-    Some(4)
+    let result:u32 = contents.lines().map(|line| parse_game(line,&bag)).sum();
+    println!("result {}",result)
 }
