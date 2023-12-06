@@ -35,7 +35,6 @@ fn check_hand(hand: Vec<(&str,&str)>, bag: &HashMap<&str, u32>)-> bool {
    true
 }
 
-
 fn parse_game_number(input: &str)-> IResult<&str,&str> {
     let (rest,(_,game)) = separated_pair(tag("Game"), tag(" "), digit1)(input)?;
     Ok((rest,game))
@@ -95,8 +94,6 @@ fn parse_game(input: &str, bag: &HashMap<&str, u32>) -> (u32,u32) {
     }
     (0,result2)
 }
-
-
 
 fn main() {
     let args: Vec<String> = env::args().collect();
