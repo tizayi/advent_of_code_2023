@@ -1,30 +1,22 @@
 use std::env;
 use std::fs;
 use nom::{
-    IResult,
+    IResult
 };
 
-fn parse_line(&str) -> IResult<&str,Vec<&str>> {
-    alt(digit1)
+struct PartNumber<'a>{
+    number: &'a str,
+    last: Option<&'a str>,
+    next: Option<&'a str>
 }
 
-fn validate_part(part_number: &PartNumber, line_vec: &Vec<&str>) -> u32 {
-    let prevous = line_vec[part_number.line - 1]
-    let line = line_vec[part_number.line]
-    let next = line_vec[part_number.line + 1]
-    let 
-}   
+fn processs_line(line: &str, last: Option<&str>, next: Option<&str> ) -> u32 {
 
-struct PartNumber {
-    line: u32,
-    idicies: Vec<u32>,
-    value: u32,
-    is_part: Option<bool>,
-}
-
-
-fn is_valid(line:&str, last_line: &str, next_line: &str) -> u32 {
-
+    let curren_line = String::from(line);
+    println!("{:?}", owned_line);
+    
+    
+    
     4
 }
 
@@ -39,4 +31,6 @@ fn main() {
     };
     let contents = fs::read_to_string(file_path).expect("File does not exist");
     println!("{:?}", contents);
+    processs_line("467..114..");
+
 }
