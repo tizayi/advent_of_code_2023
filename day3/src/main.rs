@@ -1,7 +1,6 @@
 use nom::branch::alt;
 use nom::bytes::complete::is_a;
-use nom::bytes::complete::is_not;
-use nom::bytes::complete::take_while;
+use nom::bytes::complete::take_till;
 use nom::character::complete::digit1;
 use nom::combinator::eof;
 use nom::error::Error;
@@ -14,12 +13,8 @@ fn parse_dots(input: &str) -> IResult<&str, &str> {
     is_a::<&str, &str, Error<_>>(".")(input)
 }
 
-fn is_not_digit(c: char) -> bool {
-    !c.is_digit(10)
-}
-
 fn parse_symbol(input: &str) -> IResult<&str, &str> {
-    alt((is_not("."), take_while(is_not_digit)))(input)
+    take_till(|c: char| c.is_digit(10) || c == '.')(input)
 }
 
 fn parse_line(input: &str) -> IResult<&str, (Vec<&str>, &str)> {
@@ -27,7 +22,6 @@ fn parse_line(input: &str) -> IResult<&str, (Vec<&str>, &str)> {
 }
 
 fn check_line(line_vec: &Vec<&str>, index_vec: &Vec<usize>) -> bool {
-    let mut counter = 0;
     let edge_list: Vec<usize> = line_vec
         .iter()
         .scan(0, |acc, item| {
@@ -38,9 +32,16 @@ fn check_line(line_vec: &Vec<&str>, index_vec: &Vec<usize>) -> bool {
 
     for (item_idx, edge) in edge_list.iter().enumerate() {
         for index in index_vec {
-            if edge_list[item_idx - 1] < *index && index < edge {
+            let previous_edge;
+            if item_idx == 0 {
+                previous_edge = 0
+            } else {
+                previous_edge = edge_list[item_idx - 1]
+            }
+
+            if previous_edge <= *index && index < edge {
                 let new_string = String::from(line_vec[item_idx]);
-                let char_at_index = new_string.chars().nth(edge - 1).unwrap();
+                let char_at_index = new_string.chars().nth(edge - previous_edge - 1).unwrap();
                 if !char_at_index.is_digit(10) && char_at_index != '.' {
                     return true;
                 }
@@ -69,8 +70,7 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> u32 {
         }
         None => None,
     };
-    println!("{:?} {:?} {:?}", current_vec, next_vec, last_vec);
-
+    // println!("{:?} {:?} {:?}", current_vec, next_vec, last_vec);
     let mut line_total = 0;
 
     let mut counter: usize = 0;
@@ -79,9 +79,19 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> u32 {
         match item.parse::<u32>() {
             Ok(num) => {
                 let mut need_check: Vec<usize> = Vec::new();
-                for i in counter - 1..counter + 2 {
+
+                if counter != 0 {
+                    need_check.push(counter - 1)
+                }
+
+                if idx != current_vec.len() {
+                    need_check.push(counter + item.len())
+                }
+
+                for i in counter..counter + item.len() {
                     need_check.push(i)
                 }
+
                 let symbol_in_last = match &last_vec {
                     Some(last) => check_line(&last, &need_check),
                     None => false,
@@ -94,23 +104,27 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> u32 {
 
                 let mut symbol_next_to_number = false;
 
-                match current_vec[idx - 1].chars().last() {
-                    Some(value) => {
-                        if !value.is_digit(10) && value != '.' {
-                            symbol_next_to_number = true
+                if idx > 0 {
+                    match current_vec[idx - 1].chars().last() {
+                        Some(value) => {
+                            if !value.is_digit(10) && value != '.' {
+                                symbol_next_to_number = true
+                            }
                         }
-                    }
-                    _ => {}
-                };
+                        _ => {}
+                    };
+                }
 
-                match current_vec[idx + 1].chars().last() {
-                    Some(value) => {
-                        if !value.is_digit(10) && value != '.' {
-                            symbol_next_to_number = true
+                if idx < current_vec.len() - 1 {
+                    match current_vec[idx + 1].chars().last() {
+                        Some(value) => {
+                            if !value.is_digit(10) && value != '.' {
+                                symbol_next_to_number = true
+                            }
                         }
-                    }
-                    _ => {}
-                };
+                        _ => {}
+                    };
+                }
 
                 if symbol_in_last || symbol_in_next || symbol_next_to_number {
                     line_total += num
@@ -121,8 +135,6 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> u32 {
 
         counter += item.len()
     }
-
-    println!("{:?}", line_total);
     line_total
 }
 
@@ -135,13 +147,25 @@ fn main() {
         }
         _ => panic!("only one argument is needed"),
     };
-    let contents = fs::read_to_string(file_path)
-        .expect("File does not exist")
+    let contents = fs::read_to_string(file_path).expect("File does not exist");
+    let mut last = None;
+    let line_vec: Vec<&str> = contents.lines().collect();
+    let mut result = 0;
+    for (idx, string_line) in line_vec.iter().enumerate() {
+        let next_line;
+        if idx == line_vec.len() - 1 {
+            next_line = None
+        } else {
+            next_line = Some(line_vec[idx + 1])
+        }
 
-    for (idx, string_line) in contents.lines().enumerate() {
-        let last = 
-        process_line(string_line, last, next)
+        let num = process_line(string_line, last, next_line);
+        result += num;
+        last = Some(string_line)
     }
 
-    let _result2 = process_line("...*......", Some("467..114.."), Some("..35..633."));
+    println!("{}", result);
+
+    let (_, (test, _)) = parse_line(".../89..65..&45..").unwrap();
+    println!("{:?}", test)
 }
