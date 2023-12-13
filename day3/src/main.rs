@@ -6,6 +6,7 @@ use nom::combinator::eof;
 use nom::error::Error;
 use nom::multi::many_till;
 use nom::IResult;
+use core::num;
 use std::env;
 use std::fs;
 
@@ -51,6 +52,21 @@ fn check_line(line_vec: &Vec<&str>, index_vec: &Vec<usize>) -> bool {
     false
 }
 
+
+fn check_for_gear(gear_vec: &mut Vec<u32>, line_vec: &Vec<&str>, index_vec: usize){
+    let mut counter =0;
+    for (item_idx, item) in line_vec.iter().enumerate() {
+        if counter == idx {
+
+        }
+
+        counter+=item.len();
+    }
+}
+
+
+
+
 fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> u32 {
     let current = parse_line(line);
     let (_, (current_vec, _)) = current.unwrap();
@@ -71,11 +87,41 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> u32 {
         None => None,
     };
     // println!("{:?} {:?} {:?}", current_vec, next_vec, last_vec);
-    let mut line_total = 0;
+    let mut line_total: u32 = 0;
 
+    let mut line_gear_total: Vec<u32> = Vec::new();
     let mut counter: usize = 0;
 
     for (idx, item) in current_vec.iter().enumerate() {
+        if *item == "*"{
+            // check previous
+            if idx > 0 {
+                match current_vec[idx - 1].parse::<u32>() {
+                    Ok(num) => {
+                        line_gear_total.push(num)
+                    }
+                    _ => {}
+                }
+
+            }
+
+            // check next
+            if idx < current_vec.len() - 1 {
+                match current_vec[idx + 1].parse::<u32>() {
+                    Ok(num) => {
+                        line_gear_total.push(num)
+                    }
+                    _ => {}
+                };
+            }
+
+
+
+            
+
+
+
+        }
         match item.parse::<u32>() {
             Ok(num) => {
                 let mut need_check: Vec<usize> = Vec::new();
@@ -92,12 +138,12 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> u32 {
                     need_check.push(i)
                 }
 
-                let symbol_in_last = match &last_vec {
+                let symbol_in_last: bool = match &last_vec {
                     Some(last) => check_line(&last, &need_check),
                     None => false,
                 };
 
-                let symbol_in_next = match &next_vec {
+                let symbol_in_next: bool = match &next_vec {
                     Some(value) => check_line(&value, &need_check),
                     None => false,
                 };
@@ -165,7 +211,4 @@ fn main() {
     }
 
     println!("{}", result);
-
-    let (_, (test, _)) = parse_line(".../89..65..&45..").unwrap();
-    println!("{:?}", test)
 }
