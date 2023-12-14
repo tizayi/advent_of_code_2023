@@ -2,6 +2,7 @@ use nom::{
     bytes::complete::tag, character::complete::digit1, character::complete::multispace1,
     error::Error, multi::separated_list1, sequence::separated_pair, IResult,
 };
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 
@@ -18,8 +19,8 @@ fn seperator(input: &str) -> IResult<&str, &str> {
     multispace1::<&str, Error<_>>(rest)
 }
 
-fn parse_card(input: &str) -> u32 {
-    let (rest, _) = parse_card_label(input).unwrap();
+fn parse_card(input: &str, card_map: &mut HashMap<u32, u32>) -> u32 {
+    let (rest, (_, card_num)) = parse_card_label(input).unwrap();
     let (numbers, _) = tag::<&str, &str, Error<_>>(":")(rest).unwrap();
     let (numbers, _) = multispace1::<&str, Error<_>>(numbers).unwrap();
     let (_, (winning_str, in_hand_str)) =
@@ -33,17 +34,40 @@ fn parse_card(input: &str) -> u32 {
         .iter()
         .map(|s| s.parse::<u32>().unwrap())
         .collect();
-    let mut result = 0;
+
+    // part 1 specific
+    let mut result_part1 = 0;
+    let mut result_part2 = 0;
     for num in &numbers_in_hand {
         if winning_numbers.contains(&num) {
-            if result == 0 {
-                result = 1;
+            if result_part1 == 0 {
+                result_part1 = 1;
             } else {
-                result *= 2;
+                result_part1 *= 2;
             }
+            result_part2 += 1
         }
     }
-    result
+
+    // part 2 specific
+
+    let card_number = card_num.parse::<u32>().unwrap();
+    card_map
+        .entry(card_number)
+        .and_modify(|e| *e += 1)
+        .or_insert(1);
+
+    if result_part2 > 0 {
+        let update_num = *card_map.get(&card_number).unwrap_or(&1);
+        for won_card in card_number + 1..card_number + result_part2 + 1 {
+            card_map
+                .entry(won_card)
+                .and_modify(|e| *e += update_num)
+                .or_insert(1);
+        }
+    }
+    println!("{:?}", &card_map);
+    result_part1
 }
 
 fn main() {
@@ -56,6 +80,10 @@ fn main() {
         _ => panic!("only one argument is needed"),
     };
     let contents = fs::read_to_string(file_path).expect("File does not exist");
-    let result1: u32 = contents.lines().map(|s| parse_card(s)).sum();
-    println!("part1: {:?}", result1)
+    let mut card_map: HashMap<u32, u32> = HashMap::new();
+    let result1: u32 = contents.lines().map(|s| parse_card(s, &mut card_map)).sum();
+
+    // hash map of card number the value of the win and how many copies
+    let result2: u32 = card_map.values().sum();
+    println!("part 1: {:?} part 2: {:?}", result1, result2);
 }
