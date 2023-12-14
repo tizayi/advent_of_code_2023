@@ -1,6 +1,6 @@
 use nom::branch::alt;
-use nom::bytes::complete::{is_a,tag};
-use nom::bytes::complete::take_till;
+use nom::bytes::complete::is_a;
+use nom::bytes::complete::take_while_m_n;
 use nom::character::complete::digit1;
 use nom::combinator::eof;
 use nom::error::Error;
@@ -14,54 +14,50 @@ fn parse_dots(input: &str) -> IResult<&str, &str> {
 }
 
 fn parse_symbol(input: &str) -> IResult<&str, &str> {
-    take_till(|c: char| c.is_digit(10) || c == '.')(input)
+    take_while_m_n(1, 1, |c: char| !c.is_digit(10) && c != '.')(input)
 }
 
 fn parse_line(input: &str) -> IResult<&str, (Vec<&str>, &str)> {
-    many_till(alt((parse_dots, digit1, tag("*"), parse_symbol )), eof)(input)
+    many_till(alt((parse_dots, digit1, parse_symbol)), eof)(input)
 }
 
-fn expand_line_vec(line_vec: Vec<&str>) -> Vec<&str>{
-    let mut new_line_vec:Vec<&str> = Vec::new();
-    for item in line_vec{
-        for _ in 0..item.len(){
+fn expand_line_vec(line_vec: Vec<&str>) -> Vec<&str> {
+    let mut new_line_vec: Vec<&str> = Vec::new();
+    for item in line_vec {
+        for _ in 0..item.len() {
             new_line_vec.push(item)
         }
-    };
+    }
     new_line_vec
 }
 
 fn check_line_for_symbol(line_vec: &Vec<&str>, index_vec: &Vec<usize>) -> bool {
     for item_idx in index_vec {
         let item_str = line_vec[*item_idx];
-        if item_str.chars().all(|c| !c.is_digit(10) && c != '.'){
+        if item_str.chars().all(|c| !c.is_digit(10) && c != '.') {
             return true;
         }
-    };
+    }
     false
 }
 
-fn check_line_for_num(gear_vec: &mut Vec<u32>,line_vec: &Vec<&str>, index_vec: &Vec<usize> ){
-    let mut length:usize = 0;
+fn check_line_for_num(gear_vec: &mut Vec<u32>, line_vec: &Vec<&str>, index_vec: &Vec<usize>) {
+    let mut last_item: &str = "start";
     for item_idx in index_vec {
         let item_str = line_vec[*item_idx];
-        match item_str.parse::<u32>(){
+        match item_str.parse::<u32>() {
             Ok(num) => {
-                if length == 0 {
+                if item_str != last_item {
                     gear_vec.push(num);
-                    length = item_str.len() - 1;
-                } else {
-                    length -= 1;
                 }
-            },
+            }
             _ => {}
         }
+        last_item = item_str
     }
 }
 
-
-
-fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> (u32,u32) {
+fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> (u32, u32) {
     let current = parse_line(line);
     let (_, (current_vec, _)) = current.unwrap();
     let last_vec: Option<Vec<&str>> = match last {
@@ -85,24 +81,22 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> (u32,u32)
     let mut part2_total = 0;
     let mut counter: usize = 0;
     for (idx, item) in current_vec.iter().enumerate() {
-        if *item == "*"{
+        if *item == "*" {
             let mut need_check: Vec<usize> = Vec::new();
             let mut gear_total: Vec<u32> = Vec::new();
-            
+
             if counter > 0 {
                 need_check.push(counter - 1)
             }
             need_check.push(counter);
-            
+
             if idx <= current_vec.len() {
                 need_check.push(counter + item.len())
             }
 
             if idx > 0 {
                 match current_vec[idx - 1].parse::<u32>() {
-                    Ok(num) => {
-                        gear_total.push(num)
-                    }
+                    Ok(num) => gear_total.push(num),
                     _ => {}
                 };
             }
@@ -117,17 +111,17 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> (u32,u32)
             }
 
             match &last_vec {
-                Some(last) => check_line_for_num(&mut gear_total,&last, &need_check),
-                _=>{}
+                Some(last) => check_line_for_num(&mut gear_total, &last, &need_check),
+                _ => {}
             };
 
             match &next_vec {
-                Some(value) => check_line_for_num(&mut gear_total,&value, &need_check),
-                _ => {},
-            };       
-            println!("{:?}",gear_total);  
+                Some(value) => check_line_for_num(&mut gear_total, &value, &need_check),
+                _ => {}
+            };
+            println!("{:?}", gear_total);
             if gear_total.len() == 2 {
-                let gear_ratio = gear_total[0] *gear_total[1];
+                let gear_ratio = gear_total[0] * gear_total[1];
                 part2_total += gear_ratio
             }
         }
@@ -140,7 +134,7 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> (u32,u32)
                     need_check.push(counter - 1)
                 }
 
-                if idx != current_vec.len() -1 {
+                if idx != current_vec.len() - 1 {
                     need_check.push(counter + item.len())
                 }
 
@@ -192,8 +186,7 @@ fn process_line(line: &str, last: Option<&str>, next: Option<&str>) -> (u32,u32)
         counter += item.len()
     }
 
-
-    (part1_total,part2_total)
+    (part1_total, part2_total)
 }
 
 fn main() {
@@ -207,8 +200,8 @@ fn main() {
     };
     let contents = fs::read_to_string(file_path).expect("File does not exist");
     let line_vec: Vec<&str> = contents.lines().collect();
-    let mut result_part_1:u32 = 0;
-    let mut result_part_2:u32 = 0;
+    let mut result_part_1: u32 = 0;
+    let mut result_part_2: u32 = 0;
     let mut last = None;
     for (idx, string_line) in line_vec.iter().enumerate() {
         let next_line;
@@ -218,7 +211,7 @@ fn main() {
             next_line = Some(line_vec[idx + 1])
         }
 
-        let (num1,num2) = process_line(string_line, last, next_line);
+        let (num1, num2) = process_line(string_line, last, next_line);
         result_part_1 += num1;
         result_part_2 += num2;
         last = Some(string_line)
