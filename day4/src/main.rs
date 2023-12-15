@@ -50,23 +50,24 @@ fn parse_card(input: &str, card_map: &mut HashMap<u32, u32>) -> u32 {
     }
 
     // part 2 specific
-
     let card_number = card_num.parse::<u32>().unwrap();
+
+    // add original
     card_map
         .entry(card_number)
         .and_modify(|e| *e += 1)
         .or_insert(1);
 
     if result_part2 > 0 {
-        let update_num = *card_map.get(&card_number).unwrap_or(&1);
+        let update_num = *card_map.get(&card_number).unwrap();
         for won_card in card_number + 1..card_number + result_part2 + 1 {
             card_map
                 .entry(won_card)
                 .and_modify(|e| *e += update_num)
-                .or_insert(1);
+                .or_insert(update_num);
         }
     }
-    println!("{:?}", &card_map);
+
     result_part1
 }
 
