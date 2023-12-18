@@ -17,25 +17,25 @@ fn parse_seed_numbers(input: &str) -> IResult<&str, Vec<&str>> {
     parse_numbers(numbers)
 }
 
-fn process_ranges(range_lines: Vec<&str>, seed_map: &mut HashMap<u32, u32>) {
-    for map_line in range_lines {
+fn process_ranges(range_lines: Vec<&str>, seed_map: &mut HashMap<u64, u64>) {
+    let seeds: Vec<u64> = seed_map.keys().copied().collect();
+    for seed  in seeds {
+        for map_line in &range_lines {
         let (_, range_numbers) = parse_numbers(map_line).unwrap();
-        let range_numbers: Vec<u32> = range_numbers
+        let range_numbers: Vec<u64> = range_numbers
             .iter()
-            .map(|num| num.parse::<u32>().unwrap())
+            .map(|num| num.parse::<u64>().unwrap())
             .collect();
         let range = Range::new(range_numbers[0], range_numbers[1], range_numbers[2]);
-        let seeds: Vec<u32> = seed_map.keys().cloned().collect();
-        
-        for seed in seeds {
-            match range.map(seed) {
-                None => {}
+            match range.map(*seed_map.get(&seed).unwrap()) {
+                None => {},
                 Some(value) => {
                     seed_map.insert(seed, value);
+                    break;
                 }
             }
-        }
-    }
+
+    }}
 }
 
 fn main() {
@@ -51,11 +51,11 @@ fn main() {
     let mut lines = contents.lines();
     let seed_line = lines.next().unwrap();
     let (_, seed_numbers) = parse_seed_numbers(seed_line).unwrap();
-    let seed_numbers: Vec<u32> = seed_numbers
+    let seed_numbers: Vec<u64> = seed_numbers
         .iter()
-        .map(|num| num.parse::<u32>().unwrap())
+        .map(|num| num.parse::<u64>().unwrap())
         .collect();
-    let mut seed_map: HashMap<u32, u32> = HashMap::new();
+    let mut seed_map: HashMap<u64, u64> = HashMap::new();
 
     for number in &seed_numbers {
         seed_map.insert(*number, *number);
@@ -90,4 +90,6 @@ fn main() {
         }
     }
     println!("{:?}", seed_map);
+    let part1_result = seed_map.values().min().unwrap();
+    println!("lowest location: {}",part1_result)
 }
