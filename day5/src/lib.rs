@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Range {
     destination_start: u32,
     source_start: u32,

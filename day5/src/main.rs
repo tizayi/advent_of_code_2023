@@ -26,6 +26,7 @@ fn process_ranges(range_lines: Vec<&str>, seed_map: &mut HashMap<u32, u32>) {
             .collect();
         let range = Range::new(range_numbers[0], range_numbers[1], range_numbers[2]);
         let seeds: Vec<u32> = seed_map.keys().cloned().collect();
+        
         for seed in seeds {
             match range.map(seed) {
                 None => {}
@@ -69,7 +70,6 @@ fn main() {
             | "light-to-temperature map:"
             | "temperature-to-humidity map:"
             | "humidity-to-location map:" => {
-                println!("{:?}", line);
                 let mut range_lines: Vec<&str> = Vec::new();
                 loop {
                     let map_line = lines.next();
@@ -85,7 +85,6 @@ fn main() {
                     
                 }
                 process_ranges(range_lines, &mut seed_map);
-                println!("{:?}",seed_map);
             },
             _=>{}
         }
