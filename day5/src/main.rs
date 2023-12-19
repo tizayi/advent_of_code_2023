@@ -42,7 +42,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path: &str = match args.len() {
         2 => {
-            println!("Finding calibration in {}", args[1]);
+            println!("Finding solution for  {}", args[1]);
             &args[1]
         }
         _ => panic!("only one argument is needed"),
@@ -57,8 +57,14 @@ fn main() {
         .collect();
     let mut seed_map: HashMap<u64, u64> = HashMap::new();
 
-    for number in &seed_numbers {
-        seed_map.insert(*number, *number);
+    // for number in &seed_numbers {
+    //     seed_map.insert(*number, *number);
+    // }
+
+    for i in (0..seed_numbers.len()).step_by(2){
+        for num in seed_numbers[i]..seed_numbers[i]+seed_numbers[i+1]{
+            seed_map.insert(num, num);
+        }
     }
 
     while let Some(line) = lines.next() {
@@ -89,7 +95,6 @@ fn main() {
             _=>{}
         }
     }
-    println!("{:?}", seed_map);
     let part1_result = seed_map.values().min().unwrap();
     println!("lowest location: {}",part1_result)
 }
