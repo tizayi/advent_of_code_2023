@@ -27,7 +27,7 @@ fn process_ranges(range_lines: Vec<&str>, seed_map: &mut HashMap<u64, u64>) {
             .map(|num| num.parse::<u64>().unwrap())
             .collect();
         let range = Range::new(range_numbers[0], range_numbers[1], range_numbers[2]);
-            match range.map(*seed_map.get(&seed).unwrap()) {
+            match range.translate_single(*seed_map.get(&seed).unwrap()) {
                 None => {},
                 Some(value) => {
                     seed_map.insert(seed, value);
@@ -38,16 +38,7 @@ fn process_ranges(range_lines: Vec<&str>, seed_map: &mut HashMap<u64, u64>) {
     }}
 }
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let file_path: &str = match args.len() {
-        2 => {
-            println!("Finding solution for  {}", args[1]);
-            &args[1]
-        }
-        _ => panic!("only one argument is needed"),
-    };
-    let contents = fs::read_to_string(file_path).expect("File does not exist");
+fn part1(contents: &String){
     let mut lines = contents.lines();
     let seed_line = lines.next().unwrap();
     let (_, seed_numbers) = parse_seed_numbers(seed_line).unwrap();
@@ -56,15 +47,8 @@ fn main() {
         .map(|num| num.parse::<u64>().unwrap())
         .collect();
     let mut seed_map: HashMap<u64, u64> = HashMap::new();
-
-    // for number in &seed_numbers {
-    //     seed_map.insert(*number, *number);
-    // }
-
-    for i in (0..seed_numbers.len()).step_by(2){
-        for num in seed_numbers[i]..seed_numbers[i]+seed_numbers[i+1]{
-            seed_map.insert(num, num);
-        }
+    for number in &seed_numbers {
+        seed_map.insert(*number, *number);
     }
 
     while let Some(line) = lines.next() {
@@ -96,5 +80,33 @@ fn main() {
         }
     }
     let part1_result = seed_map.values().min().unwrap();
-    println!("lowest location: {}",part1_result)
+    println!("lowest location: {}",part1_result);
+}
+
+fn part2(contents: &String){
+    let mut lines = contents.lines();
+    let seed_line = lines.next().unwrap();
+    let (_, seed_numbers) = parse_seed_numbers(seed_line).unwrap();
+    let seed_numbers: Vec<u64> = seed_numbers
+        .iter()
+        .map(|num| num.parse::<u64>().unwrap())
+        .collect();
+    println!("{:?}",seed_numbers);
+}
+
+
+
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let file_path: &str = match args.len() {
+        2 => {
+            println!("Finding solution for  {}", args[1]);
+            &args[1]
+        }
+        _ => panic!("only one argument is needed"),
+    };
+    let contents = fs::read_to_string(file_path).expect("File does not exist");
+    part1(&contents);
+    part2(&contents);
 }
