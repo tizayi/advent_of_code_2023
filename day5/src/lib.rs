@@ -6,24 +6,32 @@ pub struct Range {
 }
 
 impl Range {
-    pub fn new(destination_start: u64, source_start: u64, length: u64) -> Range {
+    pub fn new(destination_start: u64, source_start: u64, length: u64)->Range{
         Range {
             destination_start,
             source_start,
             length,
         }
     }
-    pub fn translate_single(&self, input: u64) -> Option<u64> {
-        if input < self.source_start || input >= self.source_start + self.length {
-            return None;
+}
+pub struct RangeCollection{
+    ranges: Vec<Range>
+}
+
+impl RangeCollection {
+    pub fn new(input_vec: Vec<Range>) -> RangeCollection {
+        RangeCollection {
+            ranges: input_vec
         }
-        Some(self.destination_start + (input - self.source_start))
     }
-
-    pub fn translate_range(&self,input_range: Vec<u64>) -> Vec<u64>{
-        
-
-
-        input_range
+    pub fn translate_single(&self, input: u64) -> Option<u64> {
+        for range in &self.ranges{
+            if input < range.source_start || input >= range.source_start + range.length {
+                continue;
+            }
+            return Some(range.destination_start + (input - range.source_start));
+        }
+        None
     }
 }
+
