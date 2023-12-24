@@ -94,7 +94,6 @@ pub fn get_hand_type(input_vec: &str) -> HandType{
     most_repeats.reverse();
     let most = most_repeats[0];
 
-    println!("{:?}",jocker_bonus);
     match most {
         5 => {
             return HandType::FiveKind;
