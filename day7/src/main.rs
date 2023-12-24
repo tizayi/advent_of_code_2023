@@ -5,7 +5,7 @@ use nom::{
 };
 use std::env;
 use std::fs;
-use day7::compare_cards;
+use day7::Hand;
 
 fn parse_hand(input: &str) -> IResult<&str, &str> {
     take_while(AsChar::is_alphanum)(input)
@@ -13,6 +13,16 @@ fn parse_hand(input: &str) -> IResult<&str, &str> {
 
 fn parse_hand_and_bet(input: &str) -> IResult<&str, (&str,&str)>{
     Ok(separated_pair(parse_hand, tag(" "), digit1)(input)?)
+}
+
+fn create_hand_vec(contents:&str) -> Vec<Hand>{
+    let mut result: Vec<Hand> = Vec::new();
+    for line in contents.lines(){
+        let (_,(hand,bet)) = parse_hand_and_bet(line).unwrap();
+        let bet = bet.parse::<u64>().unwrap();
+        result.push(Hand::new(hand,bet));
+    }
+    result
 }
 
 fn main() {
@@ -25,14 +35,13 @@ fn main() {
         _ => panic!("only one argument is needed"),
     };
     let contents = fs::read_to_string(file_path).expect("File does not exist");
+    let mut hand_vec = create_hand_vec(&contents);
+    hand_vec.sort();
 
-
-
-
-    let input = contents.lines().next().unwrap();
-    println!("{:?}",&input);
-    let result = parse_hand_and_bet(input);
-    let stuff = compare_cards('6','7');
-    println!("{:?}", stuff);
-    println!("Hello, world!");
+    let mut result_part1 = 0;
+    for (idx, item) in hand_vec.iter().enumerate() {
+        let rank: u64 = (idx + 1) as u64;
+        result_part1 += rank * item.bet;
+    }
+    println!("{:?}",result_part1);
 }
