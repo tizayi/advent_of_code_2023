@@ -93,6 +93,8 @@ pub fn get_hand_type(input_vec: &str) -> HandType{
     most_repeats.sort();
     most_repeats.reverse();
     let most = most_repeats[0];
+
+    println!("{:?}",jocker_bonus);
     match most {
         5 => {
             return HandType::FiveKind;
@@ -129,7 +131,7 @@ pub fn face_card(input: char) -> u32{
     'A'=> {14},
     'K'=> {13},
     'Q'=> {12},
-    'J' => {11},
+    'J' => {1},
     'T'=> {10},
     _ => panic!()
     }
